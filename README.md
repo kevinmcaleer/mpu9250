@@ -1,4 +1,4 @@
-# MPU9250
+# MPU9250 for MicroPython on the Raspberry Pi Pico
 For more information, robotics projects and tutorials visit <www.smarsfan.com>
 
 The MPU6500 provides the accelerometer and gyroscopic measurements.
