@@ -1,67 +1,104 @@
+# Simply.py - a simple MPU9250 demo app
+# Kevin McAleer
+# May 2021
+
 from machine import I2C, Pin
-from math import sqrt, atan2, pi, copysign
+from math import sqrt, atan2, pi, copysign, sin, cos
 from mpu9250 import MPU9250
 from time import sleep
 
 # addresses 
-
 MPU = 0x68
-
 id = 0
 sda = Pin(0)
 scl = Pin(1)
 
+# create the I2C
 i2c = I2C(id=id, scl=scl, sda=sda)
 
+# Scan the bus
 print(i2c.scan())
 m = MPU9250(i2c)
 
-acc_x = m.acceleration[0]
-acc_y = m.acceleration[1]
-acc_z = m.acceleration[2]
+# Calibration and bias offset
+m.ak8963.calibrate(count=100)
+pitch_bias = 0
+roll_bias = 0
 
-print(acc_x, acc_y, acc_z)
+# For low pass filtering
+filtered_x_value = 0 
+filtered_y_value = 0
 
-# scaling_gyro = 131
-# scaling_acc = 16384
-# scaling_mag = 0.6
-# scaling_temp = 321
-# offset_temp = 800
+# declination = 40
 
-# Bias
-
-# prin /t(acc_x_new_bias, acc_y_new_bias, acc_z_new_bias)
-m.ak8963.calibrate(count=10)
-
-acc_x = m.acceleration[0]
-acc_y = m.acceleration[1]
-acc_z = m.acceleration[2]
-acc_x_bias = acc_x
-acc_y_bias = acc_y
-acc_z_bias = acc_z
-
-def get_reading():
-    x = m.acceleration[0]
+def get_reading()->float:
+    ''' Returns the readings from the sensor '''
+    global filtered_y_value, filtered_x_value
+    x = m.acceleration[0] 
     y = m.acceleration[1]
-    z = m.acceleration[2]
-    # acc_x_new_bias = (acc_x_bias - acc_x)
-    # acc_y_new_bias = (acc_y_bias - acc_y)
-    # acc_z_new_bias = (acc_z_bias - acc_z)
+    z = m.acceleration[2] 
 
+    # Pitch and Roll in Radians
     roll_rad = atan2(-x, sqrt((z*z)+(y*y)))
     pitch_rad = atan2(z, copysign(y,y)*sqrt((0.01*x*x)+(y*y)))
 
-    pitch_degree = pitch_rad*180/pi
-    roll_degree = roll_rad*180/pi
-    # x = acc_x_new_bias
-    # y = acc_y_new_bias
-    # z = acc_z_new_bias
-    pitch = pitch_degree
-    roll = roll_degree
-    return x, y, z, pitch, roll 
+    # Pitch and Roll in Degrees
+    pitch = pitch_rad*180/pi
+    roll = roll_rad*180/pi
 
-while True:
-    # print(m.magnetic)
-    x, y, z, pitch, roll = get_reading()
-    print("Pitch",round(pitch,1), "Roll",round(roll, 1))
+    # Get soft_iron adjusted values from the magnetometer
+    mag_x, mag_y, magz = m.magnetic
+
+    filtered_x_value = low_pass_filter(mag_x, filtered_x_value)
+    filtered_y_value = low_pass_filter(mag_y, filtered_y_value)
+
+    az =  90 - atan2(filtered_y_value, filtered_x_value) * 180 / pi
+
+    # make sure the angle is always positive, and between 0 and 360 degrees
+    if az < 0:
+        az += 360
+        
+    # Adjust for original bias
+    pitch -= pitch_bias
+    roll -= roll_bias
+
+    if (az > 337) or (az >= 0 and az <= 22):
+        heading = 'N'
+    if az >22 and az <= 67:
+        heading = "NE"
+    if az >67 and az <= 112:
+        heading = "E"
+    if az >112 and az <= 157:
+        heading = "SE"
+    if az > 157 and az <= 202:
+        heading = "S"
+    if az > 202 and az <= 247:
+        heading = "SW"
+    if az > 247 and az <= 292:
+        heading = "W"
+    if az > 292 and az <= 337:
+        heading = "NW"
+
+    return x, y, z, pitch, roll, az, heading
+
+def low_pass_filter(raw_value:float, remembered_value):
+    ''' Only applied 20% of the raw value to the filtered value '''
+    
+    # global filtered_value
+    alpha = 0.8
+    filtered = 0
+    filtered = (alpha * remembered_value) + (1.0 - alpha) * raw_value
+    return filtered
+
+def show():
+    ''' Shows the Pitch, Rool and heading '''
+    x, y, z, pitch, roll, az, az_raw = get_reading()
+    print("Pitch",round(pitch,1), "Roll",round(roll, 1), "compass", az,"Heading", az_raw)
     sleep(0.2)
+
+# reset orientation to zero
+x,y,z, pitch_bias, roll_bias, az, az_raw = get_reading()
+
+# main loop
+while True:
+    show()
