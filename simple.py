@@ -33,21 +33,21 @@ filtered_y_value = 0
 
 def degrees_to_heading(degrees):
     heading = ""
-    if (az > 337) or (az >= 0 and az <= 22):
+    if (degrees > 337) or (degrees >= 0 and degrees <= 22):
             heading = 'N'
-    if az >22 and az <= 67:
+    if degrees >22 and degrees <= 67:
         heading = "NE"
-    if az >67 and az <= 112:
+    if degrees >67 and degrees <= 112:
         heading = "E"
-    if az >112 and az <= 157:
+    if degrees >112 and degrees <= 157:
         heading = "SE"
-    if az > 157 and az <= 202:
+    if degrees > 157 and degrees <= 202:
         heading = "S"
-    if az > 202 and az <= 247:
+    if degrees > 202 and degrees <= 247:
         heading = "SW"
-    if az > 247 and az <= 292:
+    if degrees > 247 and degrees <= 292:
         heading = "W"
-    if az > 292 and az <= 337:
+    if degrees > 292 and degrees <= 337:
         heading = "NW"
     return heading
 
