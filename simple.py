@@ -31,6 +31,26 @@ filtered_y_value = 0
 
 # declination = 40
 
+def degrees_to_heading(degrees):
+    heading = ""
+    if (az > 337) or (az >= 0 and az <= 22):
+            heading = 'N'
+    if az >22 and az <= 67:
+        heading = "NE"
+    if az >67 and az <= 112:
+        heading = "E"
+    if az >112 and az <= 157:
+        heading = "SE"
+    if az > 157 and az <= 202:
+        heading = "S"
+    if az > 202 and az <= 247:
+        heading = "SW"
+    if az > 247 and az <= 292:
+        heading = "W"
+    if az > 292 and az <= 337:
+        heading = "NW"
+    return heading
+
 def get_reading()->float:
     ''' Returns the readings from the sensor '''
     global filtered_y_value, filtered_x_value
@@ -62,22 +82,7 @@ def get_reading()->float:
     pitch -= pitch_bias
     roll -= roll_bias
 
-    if (az > 337) or (az >= 0 and az <= 22):
-        heading = 'N'
-    if az >22 and az <= 67:
-        heading = "NE"
-    if az >67 and az <= 112:
-        heading = "E"
-    if az >112 and az <= 157:
-        heading = "SE"
-    if az > 157 and az <= 202:
-        heading = "S"
-    if az > 202 and az <= 247:
-        heading = "SW"
-    if az > 247 and az <= 292:
-        heading = "W"
-    if az > 292 and az <= 337:
-        heading = "NW"
+    heading = degrees_to_heading(az)
 
     return x, y, z, pitch, roll, az, heading
 
