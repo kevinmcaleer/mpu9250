@@ -22,12 +22,12 @@ m = MPU9250(i2c)
 
 # Calibration and bias offset
 m.ak8963.calibrate(count=100)
-pitch_bias = 0
-roll_bias = 0
+pitch_bias = 0.0
+roll_bias = 0.0
 
 # For low pass filtering
-filtered_x_value = 0 
-filtered_y_value = 0
+filtered_x_value = 0.0 
+filtered_y_value = 0.0
 
 # declination = 40
 
@@ -97,8 +97,8 @@ def low_pass_filter(raw_value:float, remembered_value):
 
 def show():
     ''' Shows the Pitch, Rool and heading '''
-    x, y, z, pitch, roll, az, az_raw = get_reading()
-    print("Pitch",round(pitch,1), "Roll",round(roll, 1), "compass", az,"Heading", az_raw)
+    x, y, z, pitch, roll, az, heading_value = get_reading()
+    print("Pitch",round(pitch,1), "Roll",round(roll, 1), "compass", az,"Heading", heading_value)
     sleep(0.2)
 
 # reset orientation to zero
